@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Cuci Kendaraan & Oli API",
+    "description": "Koleksi endpoint API Sistem Pemesanan Jasa Cuci Kendaraan & Penjualan Oli (Laravel + Sanctum). Token otomatis tersimpan ke variabel setelah login. Urutan uji: Login Pelanggan -> Buat Pesanan -> Login Admin -> Konfirmasi -> Selesaikan -> Unduh Resi.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "customer_token", "value": "" },
+    { "key": "admin_token", "value": "" },
+    { "key": "order_id", "value": "" },
+    { "key": "oli_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Pelanggan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test.user@cuci.test\",\n  \"phone\": \"081200000000\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] }
+          }
+        },
+        {
+          "name": "Login Pelanggan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('customer_token', res.token); }",
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"pelanggan@cuci.test\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) { pm.collectionVariables.set('admin_token', res.token); }",
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"email\": \"admin@cuci.test\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+          }
+        },
+        {
+          "name": "Me (profil)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katalog Oli (Publik)",
+      "item": [
+        {
+          "name": "List Oli",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/oli-products?search=",
+              "host": ["{{base_url}}"],
+              "path": ["oli-products"],
+              "query": [{ "key": "search", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Detail Oli",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/oli-products/{{oli_id}}", "host": ["{{base_url}}"], "path": ["oli-products", "{{oli_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pesanan (Pelanggan)",
+      "item": [
+        {
+          "name": "Buat Pesanan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.id) { pm.collectionVariables.set('order_id', res.data.id); }",
+                  "pm.test('status 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"vehicle_type\": \"Mobil\",\n  \"vehicle_brand\": \"Toyota Avanza\",\n  \"vehicle_plate\": \"B 1234 XYZ\",\n  \"vehicle_criteria\": \"Cuci luar dalam + ganti oli\",\n  \"notes\": \"Tolong cepat\",\n  \"services\": [\n    { \"name\": \"Cuci Mobil Premium\", \"price\": 50000, \"quantity\": 1 }\n  ],\n  \"oli_items\": [\n    { \"oli_product_id\": {{oli_id}}, \"quantity\": 2 }\n  ]\n}"
+            },
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "List Pesanan Saya",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders", "host": ["{{base_url}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "Detail Pesanan",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Unduh Resi PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/pdf" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/resi", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "resi"] }
+          }
+        },
+        {
+          "name": "Batalkan Pesanan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/orders/{{order_id}}/cancel", "host": ["{{base_url}}"], "path": ["orders", "{{order_id}}", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List Semua Pesanan",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/orders?status=",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "orders"],
+              "query": [{ "key": "status", "value": "" }]
+            }
+          }
+        },
+        {
+          "name": "Konfirmasi Pesanan (terbitkan resi)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/admin/orders/{{order_id}}/confirm", "host": ["{{base_url}}"], "path": ["admin", "orders", "{{order_id}}", "confirm"] }
+          }
+        },
+        {
+          "name": "Selesaikan Pesanan (validasi + terima tunai)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/admin/orders/{{order_id}}/complete", "host": ["{{base_url}}"], "path": ["admin", "orders", "{{order_id}}", "complete"] }
+          }
+        },
+        {
+          "name": "Tambah Produk Oli",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"name\": \"Oli Baru Test\",\n  \"brand\": \"Pertamina\",\n  \"description\": \"Contoh produk\",\n  \"price\": 75000,\n  \"stock\": 25,\n  \"unit\": \"botol\",\n  \"is_active\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/admin/oli-products", "host": ["{{base_url}}"], "path": ["admin", "oli-products"] }
+          }
+        },
+        {
+          "name": "Ubah Produk Oli",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": { "raw": { "language": "json" } },
+              "raw": "{\n  \"price\": 80000,\n  \"stock\": 30\n}"
+            },
+            "url": { "raw": "{{base_url}}/admin/oli-products/{{oli_id}}", "host": ["{{base_url}}"], "path": ["admin", "oli-products", "{{oli_id}}"] }
+          }
+        },
+        {
+          "name": "Hapus Produk Oli",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/admin/oli-products/{{oli_id}}", "host": ["{{base_url}}"], "path": ["admin", "oli-products", "{{oli_id}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
