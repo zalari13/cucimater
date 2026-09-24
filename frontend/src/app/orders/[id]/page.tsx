@@ -16,8 +16,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    apiFetch<Order>(`/orders/${id}`)
-      .then(setOrder)
+    apiFetch<{ data: Order }>(`/orders/${id}`)
+      .then((res) => setOrder(res.data))
       .catch((err) => setError(err instanceof ApiError ? err.message : "Gagal memuat pesanan."))
       .finally(() => setLoading(false));
   }, [id]);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import { rupiah } from "@/lib/format";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
@@ -20,8 +20,18 @@ const SERVICE_OPTIONS: ServiceOption[] = [
 ];
 
 export default function NewOrderPage() {
+  return (
+    <Suspense fallback={<p className="text-gray-500">Memuat...</p>}>
+      <NewOrderForm />
+    </Suspense>
+  );
+}
+
+function NewOrderForm() {
   const { user, loading: authLoading } = useRequireAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectOli = searchParams.get("oli");
 
   const [products, setProducts] = useState<OliProduct[]>([]);
   const [vehicle, setVehicle] = useState({
@@ -37,10 +47,18 @@ export default function NewOrderPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch<Paginated<OliProduct>>("/oli-products", { auth: false }).then((res) =>
-      setProducts(res.data)
-    );
-  }, []);
+    apiFetch<Paginated<OliProduct>>("/oli-products", { auth: false }).then((res) => {
+      setProducts(res.data);
+
+      if (preselectOli) {
+        const id = Number(preselectOli);
+        const product = res.data.find((p) => p.id === id);
+        if (product && product.stock > 0) {
+          setSelectedOli((prev) => ({ ...prev, [id]: prev[id] ?? 1 }));
+        }
+      }
+    });
+  }, [preselectOli]);
 
   function toggleService(opt: ServiceOption) {
     setSelectedServices((prev) => {
@@ -91,11 +109,11 @@ export default function NewOrderPage() {
 
     setSubmitting(true);
     try {
-      const order = await apiFetch<Order>("/orders", {
+      const res = await apiFetch<{ data: Order }>("/orders", {
         method: "POST",
         body: { ...vehicle, services, oli_items },
       });
-      router.push(`/orders/${order.id}`);
+      router.push(`/orders/${res.data.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal membuat pesanan.");
     } finally {
