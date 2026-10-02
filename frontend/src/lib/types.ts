@@ -36,6 +36,8 @@ export interface OrderItem {
 export interface Payment {
   id: number | null;
   amount: number;
+  paid_amount: number;
+  change_amount: number;
   method: string | null;
   status: "unpaid" | "paid" | null;
   paid_at: string | null;

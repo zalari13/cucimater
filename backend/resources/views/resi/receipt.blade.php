@@ -104,6 +104,16 @@
             <td class="num" style="text-align: right;">TOTAL</td>
             <td class="num" style="text-align: right;">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
         </tr>
+        @if($paid)
+        <tr>
+            <td class="num" style="text-align: right;">Tunai Dibayar</td>
+            <td class="num" style="text-align: right;">Rp {{ number_format($order->payment->paid_amount, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="num" style="text-align: right; font-weight: bold;">Kembalian</td>
+            <td class="num" style="text-align: right; font-weight: bold;">Rp {{ number_format($order->payment->change_amount, 0, ',', '.') }}</td>
+        </tr>
+        @endif
     </table>
 
     <div class="footer">

@@ -13,6 +13,8 @@ class Payment extends Model
     protected $fillable = [
         'order_id',
         'amount',
+        'paid_amount',
+        'change_amount',
         'method',
         'status',
         'validated_by',
@@ -23,6 +25,8 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
+            'change_amount' => 'decimal:2',
             'paid_at' => 'datetime',
         ];
     }

@@ -137,7 +137,7 @@ class OrderService
      * Admin menyelesaikan transaksi.
      * (flowmap: "Validasi Resi Digital PDF" + "Terima Uang Tunai Fisik" -> "Input Data Transaksi Selesai")
      */
-    public function complete(Order $order, User $admin): Order
+    public function complete(Order $order, User $admin, float $paidAmount): Order
     {
         if ($order->status !== Order::STATUS_CONFIRMED) {
             throw ValidationException::withMessages([
@@ -145,12 +145,24 @@ class OrderService
             ]);
         }
 
-        return DB::transaction(function () use ($order, $admin) {
+        $total = (float) $order->total;
+
+        if ($paidAmount < $total) {
+            throw ValidationException::withMessages([
+                'paid_amount' => 'Uang yang dibayar kurang dari total tagihan (Rp '.number_format($total, 0, ',', '.').').',
+            ]);
+        }
+
+        $change = $paidAmount - $total;
+
+        return DB::transaction(function () use ($order, $admin, $paidAmount, $change) {
             // Validasi & terima uang tunai fisik
             $payment = $order->payment;
             if ($payment) {
                 $payment->update([
                     'status' => Payment::STATUS_PAID,
+                    'paid_amount' => $paidAmount,
+                    'change_amount' => $change,
                     'validated_by' => $admin->id,
                     'paid_at' => now(),
                 ]);

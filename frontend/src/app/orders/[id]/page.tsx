@@ -115,6 +115,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <span className="text-amber-700 font-medium">Belum bayar</span>
           )}
         </p>
+
+        {order.payment?.status === "paid" && (
+          <dl className="mt-3 grid grid-cols-2 gap-y-1 text-sm">
+            <dt className="text-gray-500">Total Tagihan</dt>
+            <dd className="text-right">{rupiah(order.total)}</dd>
+            <dt className="text-gray-500">Tunai Dibayar</dt>
+            <dd className="text-right">{rupiah(order.payment.paid_amount)}</dd>
+            <dt className="font-medium">Kembalian</dt>
+            <dd className="text-right font-bold text-green-700">
+              {rupiah(order.payment.change_amount)}
+            </dd>
+          </dl>
+        )}
         {order.resi_number ? (
           <div className="mt-3 flex items-center gap-3">
             <span className="text-sm">No. Resi: {order.resi_number}</span>

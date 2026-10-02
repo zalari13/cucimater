@@ -37,6 +37,8 @@ class OrderResource extends JsonResource
             'payment' => $this->whenLoaded('payment', fn () => [
                 'id' => $this->payment?->id,
                 'amount' => (float) ($this->payment?->amount ?? 0),
+                'paid_amount' => (float) ($this->payment?->paid_amount ?? 0),
+                'change_amount' => (float) ($this->payment?->change_amount ?? 0),
                 'method' => $this->payment?->method,
                 'status' => $this->payment?->status,
                 'paid_at' => $this->payment?->paid_at,

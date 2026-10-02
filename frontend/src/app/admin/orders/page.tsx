@@ -8,7 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 import type { Order, OrderStatus, Paginated } from "@/lib/types";
 
 const FILTERS: { label: string; value: OrderStatus | "" }[] = [
-  { label: "Semua", value: "" },
+  { label: "Semuas", value: "" },
   { label: "Pending", value: "pending" },
   { label: "Dikonfirmasi", value: "confirmed" },
   { label: "Selesai", value: "completed" },
@@ -22,6 +22,12 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
 
+  // Modal pembayaran saat menyelesaikan pesanan
+  const [payFor, setPayFor] = useState<Order | null>(null);
+  const [cashInput, setCashInput] = useState("");
+  const [payError, setPayError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+
   const load = useCallback(() => {
     setLoading(true);
     apiFetch<Paginated<Order>>("/admin/orders", { query: { status: filter || undefined } })
@@ -33,7 +39,7 @@ export default function AdminOrdersPage() {
     if (user) load();
   }, [user, load]);
 
-  async function action(id: number, kind: "confirm" | "complete" | "cancel") {
+  async function action(id: number, kind: "confirm" | "cancel") {
     setBusyId(id);
     try {
       await apiFetch(`/admin/orders/${id}/${kind}`, { method: "POST" });
@@ -42,6 +48,37 @@ export default function AdminOrdersPage() {
       alert(err instanceof ApiError ? err.message : "Aksi gagal.");
     } finally {
       setBusyId(null);
+    }
+  }
+
+  function openPayment(order: Order) {
+    setPayFor(order);
+    setCashInput("");
+    setPayError(null);
+  }
+
+  const cashNumber = Number(cashInput) || 0;
+  const change = payFor ? cashNumber - payFor.total : 0;
+
+  async function submitPayment() {
+    if (!payFor) return;
+    if (cashNumber < payFor.total) {
+      setPayError("Uang yang dibayar kurang dari total tagihan.");
+      return;
+    }
+    setPaying(true);
+    setPayError(null);
+    try {
+      await apiFetch(`/admin/orders/${payFor.id}/complete`, {
+        method: "POST",
+        body: { paid_amount: cashNumber },
+      });
+      setPayFor(null);
+      load();
+    } catch (err) {
+      setPayError(err instanceof ApiError ? err.message : "Gagal menyelesaikan pembayaran.");
+    } finally {
+      setPaying(false);
     }
   }
 
@@ -102,11 +139,11 @@ export default function AdminOrdersPage() {
                 )}
                 {o.status === "confirmed" && (
                   <button
-                    onClick={() => action(o.id, "complete")}
+                    onClick={() => openPayment(o)}
                     disabled={busyId === o.id}
                     className="rounded-lg bg-green-600 px-3 py-1.5 text-white text-sm hover:bg-green-700 disabled:opacity-60"
                   >
-                    Selesaikan (Validasi + Terima Tunai)
+                    Selesaikan (Terima Tunai)
                   </button>
                 )}
                 {o.resi_number && (
@@ -129,6 +166,67 @@ export default function AdminOrdersPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {payFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !paying && setPayFor(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold">Pembayaran Tunai</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {payFor.order_number} • {payFor.customer?.name}
+            </p>
+
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+              <span className="text-sm text-gray-600">Total Tagihan</span>
+              <span className="text-lg font-bold text-blue-700">{rupiah(payFor.total)}</span>
+            </div>
+
+            <label className="mt-4 block text-sm font-medium">Uang Dibayar Pelanggan</label>
+            <input
+              type="number"
+              min={0}
+              value={cashInput}
+              onChange={(e) => setCashInput(e.target.value)}
+              autoFocus
+              placeholder="0"
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-green-50 px-4 py-3">
+              <span className="text-sm text-gray-600">Kembalian</span>
+              <span className={`text-lg font-bold ${change < 0 ? "text-red-600" : "text-green-700"}`}>
+                {rupiah(change < 0 ? 0 : change)}
+              </span>
+            </div>
+
+            {payError && <p className="mt-3 text-sm text-red-600">{payError}</p>}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPayFor(null)}
+                disabled={paying}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={submitPayment}
+                disabled={paying || cashNumber < payFor.total}
+                className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-60"
+              >
+                {paying ? "Memproses..." : "Terima & Selesaikan"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

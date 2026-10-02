@@ -49,7 +49,11 @@ class AdminOrderController extends Controller
      */
     public function complete(Request $request, Order $order): OrderResource
     {
-        $order = $this->orders->complete($order, $request->user());
+        $validated = $request->validate([
+            'paid_amount' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $order = $this->orders->complete($order, $request->user(), (float) $validated['paid_amount']);
 
         return new OrderResource($order->load(['items', 'payment', 'user']));
     }
