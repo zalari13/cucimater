@@ -18,6 +18,16 @@ export function formatDate(value: string | null): string {
   });
 }
 
+export function formatDateOnly(value: string | null): string {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export const statusLabel: Record<string, string> = {
   pending: "Menunggu Konfirmasi",
   confirmed: "Dikonfirmasi",

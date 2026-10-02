@@ -17,6 +17,8 @@ class OrderResource extends JsonResource
             'order_number' => $this->order_number,
             'resi_number' => $this->resi_number,
             'status' => $this->status,
+            'scheduled_date' => $this->scheduled_date?->toDateString(),
+            'queue_number' => $this->queue_number,
             'vehicle_type' => $this->vehicle_type,
             'vehicle_brand' => $this->vehicle_brand,
             'vehicle_plate' => $this->vehicle_plate,

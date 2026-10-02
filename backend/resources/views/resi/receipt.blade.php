@@ -50,6 +50,14 @@
             <td class="label">Tanggal</td>
             <td>{{ optional($order->confirmed_at ?? $order->created_at)->format('d/m/Y H:i') }}</td>
         </tr>
+        @if($order->scheduled_date)
+        <tr>
+            <td class="label">Jadwal Cuci</td>
+            <td>{{ $order->scheduled_date->format('d/m/Y') }}</td>
+            <td class="label">No. Antrian</td>
+            <td><strong>#{{ $order->queue_number }}</strong></td>
+        </tr>
+        @endif
         <tr>
             <td class="label">Pelanggan</td>
             <td>{{ $order->user->name }}</td>

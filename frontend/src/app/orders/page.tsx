@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import { formatDate, rupiah } from "@/lib/format";
+import { formatDate, formatDateOnly, rupiah } from "@/lib/format";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import StatusBadge from "@/components/StatusBadge";
 import type { Order, Paginated } from "@/lib/types";
@@ -52,6 +52,11 @@ export default function MyOrdersPage() {
                   <p className="text-sm text-gray-500">
                     {o.vehicle_type} • {formatDate(o.created_at)}
                   </p>
+                  {o.scheduled_date && (
+                    <p className="mt-1 text-sm font-medium text-blue-700">
+                      Jadwal cuci: {formatDateOnly(o.scheduled_date)} • Antrian #{o.queue_number}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <StatusBadge status={o.status} />

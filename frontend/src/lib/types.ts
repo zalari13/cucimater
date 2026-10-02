@@ -55,6 +55,8 @@ export interface Order {
   order_number: string;
   resi_number: string | null;
   status: OrderStatus;
+  scheduled_date: string | null;
+  queue_number: number | null;
   vehicle_type: string;
   vehicle_brand: string | null;
   vehicle_plate: string | null;

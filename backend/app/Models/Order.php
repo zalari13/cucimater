@@ -26,6 +26,8 @@ class Order extends Model
         'vehicle_criteria',
         'notes',
         'status',
+        'scheduled_date',
+        'queue_number',
         'resi_number',
         'subtotal',
         'total',
@@ -39,6 +41,8 @@ class Order extends Model
         return [
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',
+            'scheduled_date' => 'date',
+            'queue_number' => 'integer',
             'confirmed_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

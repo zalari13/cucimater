@@ -2,7 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError, openResi } from "@/lib/api";
-import { formatDate, rupiah } from "@/lib/format";
+import { formatDate, formatDateOnly, rupiah } from "@/lib/format";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import StatusBadge from "@/components/StatusBadge";
 import type { Order } from "@/lib/types";
@@ -60,6 +60,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </div>
         <StatusBadge status={order.status} />
       </div>
+
+      {order.scheduled_date && (
+        <section className="rounded-xl border border-blue-200 bg-blue-50 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-blue-900">Jadwal Cuci</h2>
+              <p className="mt-1 text-sm text-blue-800">{formatDateOnly(order.scheduled_date)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-blue-700">No. Antrian</p>
+              <p className="text-3xl font-bold text-blue-700">#{order.queue_number}</p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="font-semibold">Kendaraan</h2>

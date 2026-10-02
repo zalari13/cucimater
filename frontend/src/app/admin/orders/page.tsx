@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError, openResi } from "@/lib/api";
-import { formatDate, rupiah } from "@/lib/format";
+import { formatDate, formatDateOnly, rupiah } from "@/lib/format";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import StatusBadge from "@/components/StatusBadge";
 import type { Order, OrderStatus, Paginated } from "@/lib/types";
@@ -117,6 +117,11 @@ export default function AdminOrdersPage() {
                     {o.customer?.name} • {o.vehicle_type}
                     {o.vehicle_brand ? ` (${o.vehicle_brand})` : ""} • {formatDate(o.created_at)}
                   </p>
+                  {o.scheduled_date && (
+                    <p className="text-sm font-medium text-blue-700">
+                      Jadwal: {formatDateOnly(o.scheduled_date)} • Antrian #{o.queue_number}
+                    </p>
+                  )}
                   {o.resi_number && (
                     <p className="text-xs text-gray-400">Resi: {o.resi_number}</p>
                   )}

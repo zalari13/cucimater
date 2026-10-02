@@ -100,6 +100,12 @@ class OrderService
                 'total' => $subtotal,
             ]);
 
+            // Jadwalkan ke antrian cuci harian jika ada layanan cuci.
+            // (pesanan oli-only tidak memakai slot antrian)
+            if (! empty($services)) {
+                $this->assignQueueSlot($order);
+            }
+
             // Buat payment record (belum dibayar)
             $order->payment()->create([
                 'amount' => $subtotal,
@@ -109,6 +115,57 @@ class OrderService
 
             return $order->fresh(['items', 'payment', 'user']);
         });
+    }
+
+    /**
+     * Tentukan tanggal & nomor antrian untuk pesanan berdasarkan kuota harian.
+     * Mencari tanggal paling awal (mulai hari ini) yang kuotanya masih tersisa
+     * untuk jenis kendaraan tersebut, lalu memberi nomor antrian berikutnya.
+     */
+    protected function assignQueueSlot(Order $order): void
+    {
+        $limit = $this->dailyLimitFor($order->vehicle_type);
+        $activeStatuses = config('wash_queue.active_statuses', ['pending', 'confirmed', 'completed']);
+
+        $date = now()->startOfDay();
+
+        // Cari hari pertama yang masih punya slot (batasi pencarian 365 hari ke depan).
+        for ($i = 0; $i < 365; $i++) {
+            $used = Order::query()
+                ->whereDate('scheduled_date', $date)
+                ->whereRaw('LOWER(vehicle_type) = ?', [strtolower($order->vehicle_type)])
+                ->whereIn('status', $activeStatuses)
+                ->where('id', '!=', $order->id)
+                ->count();
+
+            if ($used < $limit) {
+                $order->update([
+                    'scheduled_date' => $date->toDateString(),
+                    'queue_number' => $used + 1,
+                ]);
+
+                return;
+            }
+
+            $date = $date->copy()->addDay();
+        }
+    }
+
+    /**
+     * Kuota harian untuk sebuah jenis kendaraan (case-insensitive).
+     */
+    protected function dailyLimitFor(string $vehicleType): int
+    {
+        $limits = config('wash_queue.daily_limits', []);
+        $key = strtolower($vehicleType);
+
+        foreach ($limits as $type => $limit) {
+            if (strtolower($type) === $key) {
+                return (int) $limit;
+            }
+        }
+
+        return (int) config('wash_queue.default_limit', 5);
     }
 
     /**
