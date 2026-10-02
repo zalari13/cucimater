@@ -19,6 +19,19 @@ const SERVICE_OPTIONS: ServiceOption[] = [
   { name: "Cuci + Poles", price: 90000 },
 ];
 
+// Batas jam pemesanan cuci = 16:00 WIB. Dihitung dalam zona Asia/Jakarta
+// agar tidak terpengaruh timezone perangkat pengguna.
+function isPastCutoff(): boolean {
+  const wibHour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      hour12: false,
+    }).format(new Date())
+  );
+  return wibHour >= 16;
+}
+
 export default function NewOrderPage() {
   return (
     <Suspense fallback={<p className="text-gray-500">Memuat...</p>}>
@@ -232,6 +245,16 @@ function NewOrderForm() {
             <span className="text-blue-700">{rupiah(total)}</span>
           </div>
           <p className="mt-2 text-xs text-gray-500">Pembayaran tunai di lokasi.</p>
+
+          <p className="mt-2 text-xs text-amber-700">
+            Pemesanan cuci dibatasi sampai pukul 16:00 WIB. Pesanan setelah jam tersebut otomatis
+            dijadwalkan ke hari berikutnya.
+            {isPastCutoff() && (
+              <span className="block mt-1 font-medium">
+                Saat ini sudah lewat pukul 16:00 WIB — pesanan ini akan masuk antrian besok.
+              </span>
+            )}
+          </p>
 
           {error && (
             <div className="mt-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>

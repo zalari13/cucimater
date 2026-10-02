@@ -24,4 +24,22 @@ return [
     // Status pesanan yang tetap memakai slot antrian (pesanan dibatalkan
     // membebaskan slotnya sehingga bisa dipakai pesanan lain).
     'active_statuses' => ['pending', 'confirmed', 'completed'],
+
+    // Zona waktu untuk perhitungan batas jam pemesanan.
+    'timezone' => 'Asia/Jakarta', // WIB
+
+    /*
+    |--------------------------------------------------------------------------
+    | Batas Jam Pemesanan (Cut-off) per Jenis Kendaraan
+    |--------------------------------------------------------------------------
+    |
+    | Jika pesanan dibuat setelah jam ini (waktu WIB), slot hari ini dianggap
+    | tutup dan pesanan otomatis dijadwalkan mulai hari berikutnya.
+    | Format "HH:MM" (24 jam). Jenis yang tidak terdaftar = tanpa batas jam.
+    |
+    */
+    'cutoff_times' => [
+        'mobil' => '16:00', // cuci mobil dibatasi sampai jam 4 sore WIB
+        'motor' => '16:00', // cuci motor dibatasi sampai jam 4 sore WIB
+    ],
 ];

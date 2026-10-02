@@ -127,7 +127,9 @@ class OrderService
         $limit = $this->dailyLimitFor($order->vehicle_type);
         $activeStatuses = config('wash_queue.active_statuses', ['pending', 'confirmed', 'completed']);
 
-        $date = now()->startOfDay();
+        // Tanggal paling awal yang boleh dijadwalkan, memperhitungkan batas jam
+        // pemesanan (cut-off). Jika sudah lewat cut-off, mulai dari besok.
+        $date = $this->earliestSchedulableDate($order->vehicle_type);
 
         // Cari hari pertama yang masih punya slot (batasi pencarian 365 hari ke depan).
         for ($i = 0; $i < 365; $i++) {
@@ -166,6 +168,47 @@ class OrderService
         }
 
         return (int) config('wash_queue.default_limit', 5);
+    }
+
+    /**
+     * Tanggal paling awal yang boleh dijadwalkan untuk jenis kendaraan ini.
+     * Jika saat ini (waktu WIB) sudah melewati batas jam (cut-off), hari ini
+     * ditutup dan penjadwalan dimulai dari besok.
+     */
+    protected function earliestSchedulableDate(string $vehicleType): \Illuminate\Support\Carbon
+    {
+        $timezone = config('wash_queue.timezone', 'Asia/Jakarta');
+        $nowLocal = now()->setTimezone($timezone);
+
+        $cutoff = $this->cutoffTimeFor($vehicleType);
+
+        if ($cutoff !== null) {
+            [$hour, $minute] = array_map('intval', explode(':', $cutoff));
+            $cutoffMoment = $nowLocal->copy()->setTime($hour, $minute, 0);
+
+            if ($nowLocal->greaterThan($cutoffMoment)) {
+                return now()->startOfDay()->addDay();
+            }
+        }
+
+        return now()->startOfDay();
+    }
+
+    /**
+     * Batas jam pemesanan ("HH:MM") untuk jenis kendaraan, atau null jika tanpa batas.
+     */
+    protected function cutoffTimeFor(string $vehicleType): ?string
+    {
+        $cutoffs = config('wash_queue.cutoff_times', []);
+        $key = strtolower($vehicleType);
+
+        foreach ($cutoffs as $type => $time) {
+            if (strtolower($type) === $key) {
+                return $time;
+            }
+        }
+
+        return null;
     }
 
     /**
