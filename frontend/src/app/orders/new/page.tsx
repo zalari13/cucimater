@@ -19,6 +19,18 @@ const SERVICE_OPTIONS: ServiceOption[] = [
   { name: "Cuci + Poles", price: 90000 },
 ];
 
+// Rapikan input plat nomor Indonesia menjadi pola "B 1234 XYZ":
+// [kode wilayah 1-2 huruf] [nomor 1-4 angka] [seri 1-3 huruf].
+function formatPlate(raw: string): string {
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  const match = clean.match(/^([A-Z]{0,2})(\d{0,4})([A-Z]{0,3})/);
+  if (!match) return clean;
+
+  const [, area, number, series] = match;
+  return [area, number, series].filter(Boolean).join(" ");
+}
+
 // Batas jam pemesanan cuci = 16:00 WIB. Dihitung dalam zona Asia/Jakarta
 // agar tidak terpengaruh timezone perangkat pengguna.
 function isPastCutoff(): boolean {
@@ -166,10 +178,16 @@ function NewOrderForm() {
               <label className="block text-sm font-medium">Plat Nomor</label>
               <input
                 value={vehicle.vehicle_plate}
-                onChange={(e) => setVehicle({ ...vehicle, vehicle_plate: e.target.value })}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                onChange={(e) =>
+                  setVehicle({ ...vehicle, vehicle_plate: formatPlate(e.target.value) })
+                }
+                maxLength={11}
+                inputMode="text"
+                autoCapitalize="characters"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono uppercase tracking-wider"
                 placeholder="B 1234 XYZ"
               />
+              <p className="mt-1 text-xs text-gray-400">Format otomatis, contoh: B 1234 XYZ</p>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium">Kriteria / Catatan Kendaraan</label>

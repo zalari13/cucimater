@@ -19,7 +19,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'vehicle_type' => ['required', 'string', 'max:100'],
             'vehicle_brand' => ['nullable', 'string', 'max:100'],
-            'vehicle_plate' => ['nullable', 'string', 'max:20'],
+            'vehicle_plate' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{0,3}$/i'],
             'vehicle_criteria' => ['nullable', 'string', 'max:1000'],
             'notes' => ['nullable', 'string', 'max:1000'],
 
@@ -36,8 +36,23 @@ class StoreOrderRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'vehicle_plate.regex' => 'Format plat nomor tidak valid. Contoh: B 1234 XYZ.',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
-        // Minimal harus ada salah satu: layanan atau oli
+        // Normalisasi plat: huruf besar & rapikan spasi ganda.
+        if ($this->filled('vehicle_plate')) {
+            $this->merge([
+                'vehicle_plate' => strtoupper(trim(preg_replace('/\s+/', ' ', $this->input('vehicle_plate')))),
+            ]);
+        }
     }
 }
