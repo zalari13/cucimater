@@ -32,6 +32,7 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
+        // $request->user() bisa null untuk pemesan tamu (endpoint publik).
         $order = $this->orders->create($request->user(), $request->validated());
 
         return (new OrderResource($order->load(['items', 'payment', 'user'])))
@@ -43,6 +44,14 @@ class OrderController extends Controller
     {
         $this->authorizeOwner($request, $order);
 
+        return new OrderResource($order->load(['items', 'payment', 'user', 'confirmedBy']));
+    }
+
+    /**
+     * Detail pesanan untuk pemesan tamu, diakses lewat access_token (route binding).
+     */
+    public function showPublic(Order $order): OrderResource
+    {
         return new OrderResource($order->load(['items', 'payment', 'user', 'confirmedBy']));
     }
 

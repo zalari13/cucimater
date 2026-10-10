@@ -18,7 +18,7 @@ class OrderService
      *
      * @param  array<string, mixed>  $data
      */
-    public function create(User $customer, array $data): Order
+    public function create(?User $customer, array $data): Order
     {
         $services = $data['services'] ?? [];
         $oliItems = $data['oli_items'] ?? [];
@@ -29,10 +29,13 @@ class OrderService
             ]);
         }
 
-        return DB::transaction(function () use ($customer, $data, $services, $oliItems) {
+        $order = DB::transaction(function () use ($customer, $data, $services, $oliItems) {
             $order = Order::create([
                 'order_number' => $this->generateOrderNumber(),
-                'user_id' => $customer->id,
+                'user_id' => $customer?->id,
+                'customer_name' => $customer === null ? ($data['customer_name'] ?? null) : null,
+                'customer_email' => $customer === null ? ($data['customer_email'] ?? null) : null,
+                'access_token' => $customer === null ? Str::random(48) : null,
                 'vehicle_type' => $data['vehicle_type'],
                 'vehicle_brand' => $data['vehicle_brand'] ?? null,
                 'vehicle_plate' => $data['vehicle_plate'] ?? null,
@@ -115,6 +118,35 @@ class OrderService
 
             return $order->fresh(['items', 'payment', 'user']);
         });
+
+        // Kirim rincian pembayaran (PDF) ke email pemesan — di luar transaksi
+        // agar kegagalan pengiriman email tidak membatalkan pesanan.
+        $this->sendInvoiceEmail($order);
+
+        return $order;
+    }
+
+    /**
+     * Kirim email berisi rincian pembayaran (PDF) ke email pemesan.
+     * Kegagalan email dicatat ke log, tidak melempar error ke pengguna.
+     */
+    protected function sendInvoiceEmail(Order $order): void
+    {
+        $email = $order->customerEmail();
+
+        if (! $email) {
+            return;
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($email)
+                ->send(new \App\Mail\OrderInvoiceMail($order));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email invoice pesanan', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

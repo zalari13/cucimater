@@ -17,6 +17,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/oli-products', [OliProductController::class, 'index']);
 Route::get('/oli-products/{oliProduct}', [OliProductController::class, 'show']);
 
+// Pemesanan publik (tamu tanpa login) + akses detail/resi via access_token
+Route::post('/orders', [OrderController::class, 'store']);
+Route::get('/public/orders/{order:access_token}', [OrderController::class, 'showPublic']);
+Route::get('/public/orders/{order:access_token}/resi', [ResiController::class, 'downloadPublic']);
+
 // ---------------------------------------------------------------------------
 // Terautentikasi (Sanctum)
 // ---------------------------------------------------------------------------
@@ -26,7 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Pesanan pelanggan
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
 

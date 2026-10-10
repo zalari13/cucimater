@@ -20,6 +20,9 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'customer_name',
+        'customer_email',
+        'access_token',
         'vehicle_type',
         'vehicle_brand',
         'vehicle_plate',
@@ -54,6 +57,22 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Nama pemesan (dari akun user jika login, atau data tamu).
+     */
+    public function customerName(): string
+    {
+        return $this->user?->name ?? $this->customer_name ?? '-';
+    }
+
+    /**
+     * Email pemesan (dari akun user jika login, atau data tamu).
+     */
+    public function customerEmail(): ?string
+    {
+        return $this->user?->email ?? $this->customer_email;
     }
 
     /**

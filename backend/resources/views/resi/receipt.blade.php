@@ -60,7 +60,7 @@
         @endif
         <tr>
             <td class="label">Pelanggan</td>
-            <td>{{ $order->user->name }}</td>
+            <td>{{ $order->customerName() }}</td>
             <td class="label">Telepon</td>
             <td>{{ $order->user->phone ?? '-' }}</td>
         </tr>

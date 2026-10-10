@@ -78,6 +78,9 @@ DB_PASSWORD=
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
+
+# Email (lihat bagian "Email Rincian Pembayaran" di bawah)
+MAIL_MAILER=log
 MAIL_MAILER=log
 ```
 
@@ -346,3 +349,48 @@ Test berjalan pada **SQLite in-memory** (`phpunit.xml`: `DB_CONNECTION=sqlite`, 
 - [ ] `php artisan test` hijau
 
 Backend siap dipakai frontend. Lanjut ke `frontend/HOW_TO_BUILD.md`.
+
+---
+
+## 15. Email Rincian Pembayaran (PDF)
+
+Saat pesanan dibuat (termasuk oleh pemesan **tamu** tanpa login), sistem otomatis
+mengirim email berisi lampiran PDF rincian pembayaran ke email pemesan.
+
+Alur: `OrderService::create()` → `App\Mail\OrderInvoiceMail` (lampiran dari
+`resources/views/resi/invoice.blade.php`) → dikirim ke `customer_email`.
+Kegagalan pengiriman email dicatat ke log dan **tidak** membatalkan pesanan.
+
+### Mode default: `log` (tidak benar-benar terkirim)
+
+Dengan `MAIL_MAILER=log`, email tidak dikirim ke inbox manapun — isinya ditulis
+ke `storage/logs/laravel.log`. Berguna untuk pengembangan tanpa kredensial SMTP.
+
+### Mengirim email sungguhan — Mailtrap (disarankan untuk testing)
+
+1. Buat akun gratis di https://mailtrap.io, ambil kredensial inbox (SMTP).
+2. Isi `.env`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=xxxxxxxxxxxx
+MAIL_PASSWORD=xxxxxxxxxxxx
+MAIL_FROM_ADDRESS="noreply@cuci.test"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+3. Bersihkan cache config lalu buat pesanan — email + PDF akan muncul di inbox Mailtrap:
+
+```bash
+php artisan config:clear
+```
+
+### Mengirim email sungguhan — SMTP lain (Gmail, dsb.)
+
+Gunakan `MAIL_MAILER=smtp` dengan host/port/kredensial provider. Untuk Gmail,
+gunakan App Password (bukan password akun biasa) dan `MAIL_PORT=587`,
+`MAIL_ENCRYPTION=tls`.
+
+> Setelah mengubah `.env`, selalu jalankan `php artisan config:clear`.

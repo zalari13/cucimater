@@ -54,6 +54,7 @@ export interface Order {
   id: number;
   order_number: string;
   resi_number: string | null;
+  access_token: string | null;
   status: OrderStatus;
   scheduled_date: string | null;
   queue_number: number | null;

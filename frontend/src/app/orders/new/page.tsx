@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api";
 import { rupiah } from "@/lib/format";
-import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useAuth } from "@/context/AuthContext";
 import type { OliProduct, Order, Paginated } from "@/lib/types";
 
 interface ServiceOption {
@@ -55,12 +55,17 @@ export default function NewOrderPage() {
 }
 
 function NewOrderForm() {
-  const { user, loading: authLoading } = useRequireAuth();
+  // Pemesanan terbuka untuk tamu. Jika kebetulan login sebagai pelanggan,
+  // nama & email diambil dari akun (field pemesan disembunyikan).
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectOli = searchParams.get("oli");
 
+  const isGuest = !user;
+
   const [products, setProducts] = useState<OliProduct[]>([]);
+  const [customer, setCustomer] = useState({ name: "", email: "" });
   const [vehicle, setVehicle] = useState({
     vehicle_type: "Mobil",
     vehicle_brand: "",
@@ -120,6 +125,11 @@ function NewOrderForm() {
     e.preventDefault();
     setError(null);
 
+    if (isGuest && (!customer.name.trim() || !customer.email.trim())) {
+      setError("Nama dan email pemesan wajib diisi.");
+      return;
+    }
+
     const services = Object.entries(selectedServices).map(([name, quantity]) => {
       const opt = SERVICE_OPTIONS.find((s) => s.name === name)!;
       return { name, price: opt.price, quantity };
@@ -134,13 +144,25 @@ function NewOrderForm() {
       return;
     }
 
+    const body: Record<string, unknown> = { ...vehicle, services, oli_items };
+    if (isGuest) {
+      body.customer_name = customer.name.trim();
+      body.customer_email = customer.email.trim();
+    }
+
     setSubmitting(true);
     try {
       const res = await apiFetch<{ data: Order }>("/orders", {
         method: "POST",
-        body: { ...vehicle, services, oli_items },
+        body,
+        auth: !isGuest,
       });
-      router.push(`/orders/${res.data.id}`);
+      const order = res.data;
+      if (isGuest && order.access_token) {
+        router.push(`/orders/success?token=${order.access_token}`);
+      } else {
+        router.push(`/orders/${order.id}`);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal membuat pesanan.");
     } finally {
@@ -148,11 +170,43 @@ function NewOrderForm() {
     }
   }
 
-  if (authLoading || !user) return <p className="text-gray-500">Memuat...</p>;
+  if (authLoading) return <p className="text-gray-500">Memuat...</p>;
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
+        {isGuest && (
+          <section className="rounded-xl border border-gray-200 bg-white p-6">
+            <h2 className="font-semibold text-lg">Data Pemesan</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Rincian pembayaran (PDF) akan dikirim ke email ini.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium">Nama Pemesan</label>
+                <input
+                  value={customer.name}
+                  onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                  required
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="Nama lengkap"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Email Pemesan</label>
+                <input
+                  type="email"
+                  value={customer.email}
+                  onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+                  required
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="email@contoh.com"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="font-semibold text-lg">Data Kendaraan</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -22,6 +22,19 @@ class ResiController extends Controller
             'Anda tidak memiliki akses ke resi ini.'
         );
 
+        return $this->streamResi($order);
+    }
+
+    /**
+     * Resi untuk pemesan tamu, diakses lewat access_token (route binding).
+     */
+    public function downloadPublic(Order $order): Response
+    {
+        return $this->streamResi($order);
+    }
+
+    private function streamResi(Order $order): Response
+    {
         abort_if(
             $order->resi_number === null,
             404,

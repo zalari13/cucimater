@@ -29,12 +29,13 @@ class OrderResource extends JsonResource
             'confirmed_at' => $this->confirmed_at,
             'completed_at' => $this->completed_at,
             'created_at' => $this->created_at,
-            'customer' => $this->whenLoaded('user', fn () => [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-                'email' => $this->user->email,
-                'phone' => $this->user->phone,
-            ]),
+            'access_token' => $this->access_token,
+            'customer' => [
+                'id' => $this->user?->id,
+                'name' => $this->customerName(),
+                'email' => $this->customerEmail(),
+                'phone' => $this->user?->phone,
+            ],
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'payment' => $this->whenLoaded('payment', fn () => [
                 'id' => $this->payment?->id,

@@ -8,7 +8,8 @@ class StoreOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        // Pemesanan terbuka untuk tamu maupun pengguna login.
+        return true;
     }
 
     /**
@@ -16,7 +17,13 @@ class StoreOrderRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Jika pemesan tamu (tidak login), nama & email wajib diisi.
+        $guestRule = $this->user() === null ? 'required' : 'nullable';
+
         return [
+            'customer_name' => [$guestRule, 'string', 'max:150'],
+            'customer_email' => [$guestRule, 'email', 'max:150'],
+
             'vehicle_type' => ['required', 'string', 'max:100'],
             'vehicle_brand' => ['nullable', 'string', 'max:100'],
             'vehicle_plate' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{0,3}$/i'],
