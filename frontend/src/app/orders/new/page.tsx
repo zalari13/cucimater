@@ -17,6 +17,8 @@ const SERVICE_OPTIONS: ServiceOption[] = [
   { name: "Cuci Mobil Standar", price: 35000 },
   { name: "Cuci Mobil Premium (luar dalam)", price: 50000 },
   { name: "Cuci + Poles", price: 90000 },
+  { name: "Cuci Helm", price: 15000 },
+  { name: "Cuci Sepatu Trail", price: 15000 },
 ];
 
 // Rapikan input plat nomor Indonesia menjadi pola "B 1234 XYZ":
