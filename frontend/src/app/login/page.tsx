@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-gray-500">Memuat...</p>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +30,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      router.push(user.role === "admin" ? "/admin/orders" : "/orders");
+      // Prioritaskan tujuan asal (?redirect=), lalu fallback ke default per role.
+      if (redirect) {
+        router.push(redirect);
+      } else {
+        router.push(user.role === "admin" ? "/admin/orders" : "/orders");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal masuk.");
     } finally {
