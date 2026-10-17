@@ -34,7 +34,7 @@ class OrderResource extends JsonResource
                 'id' => $this->user?->id,
                 'name' => $this->customerName(),
                 'email' => $this->customerEmail(),
-                'phone' => $this->user?->phone,
+                'phone' => $this->customerPhone(),
             ],
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'payment' => $this->whenLoaded('payment', fn () => [

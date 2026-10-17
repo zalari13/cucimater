@@ -44,9 +44,9 @@ export interface Payment {
 }
 
 export interface OrderCustomer {
-  id: number;
+  id: number | null;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
 }
 

@@ -22,6 +22,7 @@ class Order extends Model
         'user_id',
         'customer_name',
         'customer_email',
+        'customer_phone',
         'access_token',
         'vehicle_type',
         'vehicle_brand',
@@ -73,6 +74,14 @@ class Order extends Model
     public function customerEmail(): ?string
     {
         return $this->user?->email ?? $this->customer_email;
+    }
+
+    /**
+     * Nomor telepon/WhatsApp pemesan (dari akun user jika login, atau data tamu).
+     */
+    public function customerPhone(): ?string
+    {
+        return $this->user?->phone ?? $this->customer_phone;
     }
 
     /**

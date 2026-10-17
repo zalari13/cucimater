@@ -48,6 +48,33 @@ function OrderSuccess() {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
+  // Ubah nomor lokal (08xx) ke format internasional wa.me (62xx).
+  function toWaNumber(phone: string): string {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("0")) return "62" + digits.slice(1);
+    if (digits.startsWith("62")) return digits;
+    return digits;
+  }
+
+  function waLink(o: Order): string {
+    const pdfUrl = `${API_URL}/public/orders/${token}/resi`;
+    const lines = [
+      `Halo, saya ingin konfirmasi pesanan:`,
+      `No. Pesanan: ${o.order_number}`,
+      `Nama: ${o.customer?.name ?? "-"}`,
+      `Kendaraan: ${o.vehicle_type}${o.vehicle_plate ? ` (${o.vehicle_plate})` : ""}`,
+      o.scheduled_date
+        ? `Jadwal cuci: ${formatDateOnly(o.scheduled_date)} - Antrian #${o.queue_number}`
+        : "",
+      `Total: ${rupiah(o.total)}`,
+      ``,
+      `Rincian pembayaran (PDF): ${pdfUrl}`,
+    ].filter(Boolean);
+
+    const number = o.customer?.phone ? toWaNumber(o.customer.phone) : "";
+    return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
+  }
+
   if (loading) return <p className="text-gray-500">Memuat...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
   if (!order) return null;
@@ -61,7 +88,8 @@ function OrderSuccess() {
         <h1 className="mt-4 text-2xl font-bold text-green-900">Pesanan Berhasil Dibuat</h1>
         <p className="mt-2 text-sm text-green-800">
           Rincian pembayaran telah dikirim ke email <strong>{order.customer?.email}</strong>.
-          Simpan halaman ini untuk memantau pesanan Anda.
+          Anda juga bisa mengirim ringkasan ini ke WhatsApp. Simpan halaman ini untuk memantau
+          pesanan Anda.
         </p>
       </div>
 
@@ -89,6 +117,16 @@ function OrderSuccess() {
         </dl>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {order.customer?.phone && (
+            <a
+              href={waLink(order)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+            >
+              Kirim ke WhatsApp
+            </a>
+          )}
           {order.resi_number ? (
             <button
               onClick={openResi}
@@ -97,7 +135,7 @@ function OrderSuccess() {
               Lihat Resi PDF
             </button>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="w-full text-sm text-gray-500">
               Resi akan tersedia setelah pesanan dikonfirmasi admin. Rincian pembayaran sudah
               dikirim ke email Anda.
             </p>

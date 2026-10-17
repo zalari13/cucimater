@@ -23,6 +23,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_name' => [$guestRule, 'string', 'max:150'],
             'customer_email' => [$guestRule, 'email', 'max:150'],
+            'customer_phone' => [$guestRule, 'string', 'max:20'],
 
             'vehicle_type' => ['required', 'string', 'max:100'],
             'vehicle_brand' => ['nullable', 'string', 'max:100'],

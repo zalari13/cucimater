@@ -65,7 +65,7 @@ function NewOrderForm() {
   const isGuest = !user;
 
   const [products, setProducts] = useState<OliProduct[]>([]);
-  const [customer, setCustomer] = useState({ name: "", email: "" });
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
   const [vehicle, setVehicle] = useState({
     vehicle_type: "Mobil",
     vehicle_brand: "",
@@ -125,8 +125,8 @@ function NewOrderForm() {
     e.preventDefault();
     setError(null);
 
-    if (isGuest && (!customer.name.trim() || !customer.email.trim())) {
-      setError("Nama dan email pemesan wajib diisi.");
+    if (isGuest && (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim())) {
+      setError("Nama, email, dan nomor WhatsApp pemesan wajib diisi.");
       return;
     }
 
@@ -148,6 +148,7 @@ function NewOrderForm() {
     if (isGuest) {
       body.customer_name = customer.name.trim();
       body.customer_email = customer.email.trim();
+      body.customer_phone = customer.phone.trim();
     }
 
     setSubmitting(true);
@@ -181,7 +182,7 @@ function NewOrderForm() {
             <p className="mt-1 text-sm text-gray-500">
               Rincian pembayaran (PDF) akan dikirim ke email ini.
             </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <div>
                 <label className="block text-sm font-medium">Nama Pemesan</label>
                 <input
@@ -201,6 +202,17 @@ function NewOrderForm() {
                   required
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                   placeholder="email@contoh.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">No. WhatsApp</label>
+                <input
+                  type="tel"
+                  value={customer.phone}
+                  onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+                  required
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                  placeholder="08xxxxxxxxxx"
                 />
               </div>
             </div>
