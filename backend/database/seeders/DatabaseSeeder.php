@@ -49,6 +49,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Castrol Power1 10W-30', 'brand' => 'Castrol', 'price' => 85000, 'stock' => 35, 'unit' => 'botol', 'description' => 'Oli motor sport dengan Power Release Formula.', 'image_url' => '/images/products/castrol-power1.svg'],
             ['name' => 'Motul 5100 15W-50', 'brand' => 'Motul', 'price' => 130000, 'stock' => 20, 'unit' => 'liter', 'description' => 'Oli semi sintetik Ester untuk motor besar.', 'image_url' => '/images/products/motul-5100.svg'],
             ['name' => 'Yamalube Super Matic', 'brand' => 'Yamalube', 'price' => 48000, 'stock' => 60, 'unit' => 'botol', 'description' => 'Oli khusus motor matic Yamaha.', 'image_url' => '/images/products/yamalube.svg'],
+            ['name' => 'ENEOS City 4T 20W-40', 'brand' => 'ENEOS', 'price' => 54000, 'stock' => 30, 'unit' => 'botol', 'description' => 'Oli mesin 4-tak SJ/JASO MA untuk motor harian.', 'image_url' => '/images/products/eneos-city-4t.jpg'],
+            ['name' => 'ENEOS X 10W-40', 'brand' => 'ENEOS', 'price' => 115000, 'stock' => 30, 'unit' => 'botol', 'description' => 'Oli motor fully synthetic SP dengan Molybdenum.', 'image_url' => '/images/products/eneos-x-10w40.jpg'],
+            ['name' => 'ENEOS Molybdenum 10W-40', 'brand' => 'ENEOS', 'price' => 103550, 'stock' => 30, 'unit' => 'liter', 'description' => 'Oli mesin SM SAE 10W-40 dengan teknologi Molybdenum.', 'image_url' => '/images/products/eneos-molybdenum.jpg'],
         ];
 
         foreach ($olis as $oli) {
