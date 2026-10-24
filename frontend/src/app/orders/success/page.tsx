@@ -57,7 +57,8 @@ function OrderSuccess() {
   }
 
   function waLink(o: Order): string {
-    const pdfUrl = `${API_URL}/public/orders/${token}/resi`;
+    // Kirim ringkasan pesanan sebagai teks saja (tanpa link PDF).
+    // Rincian pembayaran lengkap tetap dikirim ke email pemesan.
     const lines = [
       `Halo, saya ingin konfirmasi pesanan:`,
       `No. Pesanan: ${o.order_number}`,
@@ -67,8 +68,6 @@ function OrderSuccess() {
         ? `Jadwal cuci: ${formatDateOnly(o.scheduled_date)} - Antrian #${o.queue_number}`
         : "",
       `Total: ${rupiah(o.total)}`,
-      ``,
-      `Rincian pembayaran (PDF): ${pdfUrl}`,
     ].filter(Boolean);
 
     const number = o.customer?.phone ? toWaNumber(o.customer.phone) : "";
