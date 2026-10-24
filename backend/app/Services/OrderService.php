@@ -35,7 +35,8 @@ class OrderService
                 'user_id' => $customer?->id,
                 'customer_name' => $customer === null ? ($data['customer_name'] ?? null) : null,
                 'customer_email' => $customer === null ? ($data['customer_email'] ?? null) : null,
-                'customer_phone' => $customer === null ? ($data['customer_phone'] ?? null) : null,
+                // Nomor WA bisa diisi baik oleh tamu maupun pengguna login.
+                'customer_phone' => $data['customer_phone'] ?? null,
                 'access_token' => $customer === null ? Str::random(48) : null,
                 'vehicle_type' => $data['vehicle_type'],
                 'vehicle_brand' => $data['vehicle_brand'] ?? null,

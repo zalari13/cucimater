@@ -17,8 +17,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/oli-products', [OliProductController::class, 'index']);
 Route::get('/oli-products/{oliProduct}', [OliProductController::class, 'show']);
 
-// Pemesanan publik (tamu tanpa login) + akses detail/resi via access_token
-Route::post('/orders', [OrderController::class, 'store']);
+// Pemesanan publik (tamu tanpa login) + akses detail/resi via access_token.
+// auth.optional: jika ada token valid, user di-resolve; jika tidak, tetap jalan sebagai tamu.
+Route::post('/orders', [OrderController::class, 'store'])->middleware('auth.optional');
 Route::get('/public/orders/{order:access_token}', [OrderController::class, 'showPublic']);
 Route::get('/public/orders/{order:access_token}/resi', [ResiController::class, 'downloadPublic']);
 

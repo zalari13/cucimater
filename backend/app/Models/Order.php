@@ -81,7 +81,8 @@ class Order extends Model
      */
     public function customerPhone(): ?string
     {
-        return $this->user?->phone ?? $this->customer_phone;
+        // Prioritaskan nomor yang diisi di pesanan, lalu fallback ke akun user.
+        return $this->customer_phone ?? $this->user?->phone;
     }
 
     /**

@@ -88,6 +88,17 @@ function NewOrderForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Prefill data pemesan dari akun ketika login sebagai pelanggan.
+  useEffect(() => {
+    if (user) {
+      setCustomer({
+        name: user.name ?? "",
+        email: user.email ?? "",
+        phone: user.phone ? normalizePhone(user.phone) : "",
+      });
+    }
+  }, [user]);
+
   useEffect(() => {
     apiFetch<Paginated<OliProduct>>("/oli-products", { auth: false }).then((res) => {
       setProducts(res.data);
@@ -135,14 +146,14 @@ function NewOrderForm() {
     e.preventDefault();
     setError(null);
 
-    if (isGuest && (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim())) {
+    if (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim()) {
       setError("Nama, email, dan nomor WhatsApp pemesan wajib diisi.");
       return;
     }
 
     // Validasi format email (pola standar: ada "@" dan domain berakhiran).
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (isGuest && !emailPattern.test(customer.email.trim())) {
+    if (!emailPattern.test(customer.email.trim())) {
       setError("Masukkan alamat email yang valid, contoh: nama@email.com.");
       return;
     }
@@ -165,6 +176,9 @@ function NewOrderForm() {
     if (isGuest) {
       body.customer_name = customer.name.trim();
       body.customer_email = customer.email.trim();
+      body.customer_phone = "62" + customer.phone.trim();
+    } else {
+      // User login: nama & email ikut akun, tapi nomor WA bisa diisi di sini.
       body.customer_phone = "62" + customer.phone.trim();
     }
 
@@ -193,54 +207,58 @@ function NewOrderForm() {
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
-        {isGuest && (
-          <section className="rounded-xl border border-gray-200 bg-white p-6">
-            <h2 className="font-semibold text-lg">Data Pemesan</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Rincian pembayaran (PDF) akan dikirim ke email ini.
-            </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="block text-sm font-medium">Nama Pemesan</label>
-                <input
-                  value={customer.name}
-                  onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                  required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="Nama lengkap"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Email Pemesan</label>
-                <input
-                  type="email"
-                  value={customer.email}
-                  onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                  required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="email@contoh.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">No. WhatsApp</label>
-                <div className="mt-1 flex rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500">
-                  <span className="flex items-center rounded-l-lg border-r border-gray-300 bg-gray-50 px-3 text-gray-600">
-                    +62
-                  </span>
-                  <input
-                    type="tel"
-                    value={customer.phone}
-                    onChange={(e) => setCustomer({ ...customer, phone: normalizePhone(e.target.value) })}
-                    required
-                    className="w-full rounded-r-lg px-3 py-2 focus:outline-none"
-                    placeholder="81234567890"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-400">Tanpa angka 0 di depan. Contoh: 81234567890</p>
-              </div>
+        <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="font-semibold text-lg">Data Pemesan</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Rincian pembayaran (PDF) akan dikirim ke email ini.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="block text-sm font-medium">Nama Pemesan</label>
+              <input
+                value={customer.name}
+                onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                required
+                readOnly={!isGuest}
+                className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 ${
+                  !isGuest ? "bg-gray-50 text-gray-600" : ""
+                }`}
+                placeholder="Nama lengkap"
+              />
             </div>
-          </section>
-        )}
+            <div>
+              <label className="block text-sm font-medium">Email Pemesan</label>
+              <input
+                type="email"
+                value={customer.email}
+                onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+                required
+                readOnly={!isGuest}
+                className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 ${
+                  !isGuest ? "bg-gray-50 text-gray-600" : ""
+                }`}
+                placeholder="email@contoh.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">No. WhatsApp</label>
+              <div className="mt-1 flex rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500">
+                <span className="flex items-center rounded-l-lg border-r border-gray-300 bg-gray-50 px-3 text-gray-600">
+                  +62
+                </span>
+                <input
+                  type="tel"
+                  value={customer.phone}
+                  onChange={(e) => setCustomer({ ...customer, phone: normalizePhone(e.target.value) })}
+                  required
+                  className="w-full rounded-r-lg px-3 py-2 focus:outline-none"
+                  placeholder="81234567890"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-400">Tanpa angka 0 di depan. Contoh: 81234567890</p>
+            </div>
+          </div>
+        </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="font-semibold text-lg">Data Kendaraan</h2>
