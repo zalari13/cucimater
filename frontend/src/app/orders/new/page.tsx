@@ -33,6 +33,16 @@ function formatPlate(raw: string): string {
   return [area, number, series].filter(Boolean).join(" ");
 }
 
+// Normalisasi nomor WA: simpan hanya bagian SETELAH kode negara 62.
+// Prefix "+62" ditampilkan statis di UI, jadi di sini kita buang 0/62 di depan
+// supaya tidak dobel. Contoh: "08123" -> "8123", "628123" -> "8123".
+function normalizePhone(raw: string): string {
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("62")) digits = digits.slice(2);
+  else if (digits.startsWith("0")) digits = digits.slice(1);
+  return digits;
+}
+
 // Batas jam pemesanan cuci = 16:00 WIB. Dihitung dalam zona Asia/Jakarta
 // agar tidak terpengaruh timezone perangkat pengguna.
 function isPastCutoff(): boolean {
@@ -155,7 +165,7 @@ function NewOrderForm() {
     if (isGuest) {
       body.customer_name = customer.name.trim();
       body.customer_email = customer.email.trim();
-      body.customer_phone = customer.phone.trim();
+      body.customer_phone = "62" + customer.phone.trim();
     }
 
     setSubmitting(true);
@@ -213,14 +223,20 @@ function NewOrderForm() {
               </div>
               <div>
                 <label className="block text-sm font-medium">No. WhatsApp</label>
-                <input
-                  type="tel"
-                  value={customer.phone}
-                  onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                  required
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                  placeholder="08xxxxxxxxxx"
-                />
+                <div className="mt-1 flex rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500">
+                  <span className="flex items-center rounded-l-lg border-r border-gray-300 bg-gray-50 px-3 text-gray-600">
+                    +62
+                  </span>
+                  <input
+                    type="tel"
+                    value={customer.phone}
+                    onChange={(e) => setCustomer({ ...customer, phone: normalizePhone(e.target.value) })}
+                    required
+                    className="w-full rounded-r-lg px-3 py-2 focus:outline-none"
+                    placeholder="81234567890"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-400">Tanpa angka 0 di depan. Contoh: 81234567890</p>
               </div>
             </div>
           </section>

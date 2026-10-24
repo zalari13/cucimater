@@ -227,10 +227,10 @@ export default function AdminOrdersPage() {
 
             <label className="mt-4 block text-sm font-medium">Uang Dibayar Pelanggan</label>
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="numeric"
               value={cashInput}
-              onChange={(e) => setCashInput(e.target.value)}
+              onChange={(e) => setCashInput(e.target.value.replace(/\D/g, ""))}
               autoFocus
               placeholder="0"
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
