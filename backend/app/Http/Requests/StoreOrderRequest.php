@@ -22,7 +22,8 @@ class StoreOrderRequest extends FormRequest
 
         return [
             'customer_name' => [$guestRule, 'string', 'max:150'],
-            'customer_email' => [$guestRule, 'email', 'max:150'],
+            // email:rfc,dns -> format RFC valid DAN domain punya record DNS (MX/A).
+            'customer_email' => [$guestRule, 'email:rfc,dns', 'max:150'],
             'customer_phone' => [$guestRule, 'string', 'max:20'],
 
             'vehicle_type' => ['required', 'string', 'max:100'],
@@ -51,6 +52,10 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'vehicle_plate.regex' => 'Format plat nomor tidak valid. Contoh: B 1234 XYZ.',
+            'customer_email.email' => 'Masukkan alamat email yang valid dan aktif.',
+            'customer_email.required' => 'Email pemesan wajib diisi.',
+            'customer_name.required' => 'Nama pemesan wajib diisi.',
+            'customer_phone.required' => 'Nomor WhatsApp wajib diisi.',
         ];
     }
 
@@ -60,6 +65,13 @@ class StoreOrderRequest extends FormRequest
         if ($this->filled('vehicle_plate')) {
             $this->merge([
                 'vehicle_plate' => strtoupper(trim(preg_replace('/\s+/', ' ', $this->input('vehicle_plate')))),
+            ]);
+        }
+
+        // Normalisasi email: rapikan spasi & huruf kecil.
+        if ($this->filled('customer_email')) {
+            $this->merge([
+                'customer_email' => strtolower(trim($this->input('customer_email'))),
             ]);
         }
     }

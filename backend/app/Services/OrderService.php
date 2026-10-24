@@ -288,7 +288,7 @@ class OrderService
 
         $change = $paidAmount - $total;
 
-        return DB::transaction(function () use ($order, $admin, $paidAmount, $change) {
+        $order = DB::transaction(function () use ($order, $admin, $paidAmount, $change) {
             // Validasi & terima uang tunai fisik
             $payment = $order->payment;
             if ($payment) {
@@ -308,6 +308,34 @@ class OrderService
 
             return $order->fresh(['items', 'payment', 'user', 'confirmedBy']);
         });
+
+        // Kirim email notifikasi "pesanan selesai" + lampiran resi PDF lunas.
+        $this->sendCompletedEmail($order);
+
+        return $order;
+    }
+
+    /**
+     * Kirim email notifikasi pesanan selesai ke email pemesan.
+     * Kegagalan email dicatat ke log, tidak melempar error ke pengguna.
+     */
+    protected function sendCompletedEmail(Order $order): void
+    {
+        $email = $order->customerEmail();
+
+        if (! $email) {
+            return;
+        }
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($email)
+                ->send(new \App\Mail\OrderCompletedMail($order));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email pesanan selesai', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function cancel(Order $order): Order

@@ -130,6 +130,13 @@ function NewOrderForm() {
       return;
     }
 
+    // Validasi format email (pola standar: ada "@" dan domain berakhiran).
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (isGuest && !emailPattern.test(customer.email.trim())) {
+      setError("Masukkan alamat email yang valid, contoh: nama@email.com.");
+      return;
+    }
+
     const services = Object.entries(selectedServices).map(([name, quantity]) => {
       const opt = SERVICE_OPTIONS.find((s) => s.name === name)!;
       return { name, price: opt.price, quantity };

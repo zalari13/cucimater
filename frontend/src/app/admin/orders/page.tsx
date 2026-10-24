@@ -57,6 +57,28 @@ export default function AdminOrdersPage() {
     setPayError(null);
   }
 
+  // Ubah nomor lokal (08xx) ke format internasional wa.me (62xx).
+  function toWaNumber(phone: string): string {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("0")) return "62" + digits.slice(1);
+    if (digits.startsWith("62")) return digits;
+    return digits;
+  }
+
+  // Link WhatsApp berisi pesan "pesanan selesai" (teks saja).
+  function waDoneLink(o: Order): string {
+    const lines = [
+      `Halo ${o.customer?.name ?? ""}, pesanan Anda sudah SELESAI.`,
+      `No. Pesanan: ${o.order_number}`,
+      o.resi_number ? `No. Resi: ${o.resi_number}` : "",
+      `Kendaraan: ${o.vehicle_type}${o.vehicle_plate ? ` (${o.vehicle_plate})` : ""}`,
+      `Total: ${rupiah(o.total)}`,
+      `Terima kasih telah menggunakan layanan kami.`,
+    ].filter(Boolean);
+    const number = o.customer?.phone ? toWaNumber(o.customer.phone) : "";
+    return `https://wa.me/${number}?text=${encodeURIComponent(lines.join("\n"))}`;
+  }
+
   const cashNumber = Number(cashInput) || 0;
   const change = payFor ? cashNumber - payFor.total : 0;
 
@@ -158,6 +180,16 @@ export default function AdminOrdersPage() {
                   >
                     Lihat Resi PDF
                   </button>
+                )}
+                {o.status === "completed" && o.customer?.phone && (
+                  <a
+                    href={waDoneLink(o)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg bg-green-600 px-3 py-1.5 text-white text-sm hover:bg-green-700"
+                  >
+                    Kirim WA Selesai
+                  </a>
                 )}
                 {(o.status === "pending" || o.status === "confirmed") && (
                   <button
