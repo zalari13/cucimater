@@ -35,16 +35,23 @@ export default function AdminOrdersPage() {
   const [editError, setEditError] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const isStaff = user?.role === "admin" || user?.role === "kasir";
+
   const load = useCallback(() => {
     setLoading(true);
     apiFetch<Paginated<Order>>("/admin/orders", { query: { status: filter || undefined } })
       .then((res) => setOrders(res.data))
+      .catch(() => {
+        /* diabaikan: non-staf akan dialihkan oleh useRequireAuth */
+      })
       .finally(() => setLoading(false));
   }, [filter]);
 
   useEffect(() => {
-    if (user) load();
-  }, [user, load]);
+    // Hanya muat data untuk staf. Pelanggan akan dialihkan oleh guard,
+    // jadi jangan menembak endpoint admin (mencegah error 403).
+    if (user && isStaff) load();
+  }, [user, isStaff, load]);
 
   async function action(id: number, kind: "confirm" | "cancel") {
     setBusyId(id);
@@ -62,6 +69,14 @@ export default function AdminOrdersPage() {
     setPayFor(order);
     setCashInput("");
     setPayError(null);
+  }
+
+  async function handleResi(id: number) {
+    try {
+      await openResi(id);
+    } catch (err) {
+      alert(err instanceof ApiError ? err.message : "Gagal membuka resi.");
+    }
   }
 
   // Ubah nomor lokal (08xx) ke format internasional wa.me (62xx).
@@ -221,7 +236,7 @@ export default function AdminOrdersPage() {
                 )}
                 {o.resi_number && (
                   <button
-                    onClick={() => openResi(o.id)}
+                    onClick={() => handleResi(o.id)}
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
                   >
                     Lihat Resi PDF

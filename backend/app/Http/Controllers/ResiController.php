@@ -17,7 +17,7 @@ class ResiController extends Controller
     public function download(Request $request, Order $order): Response
     {
         abort_unless(
-            $order->user_id === $request->user()->id || $request->user()->isAdmin(),
+            $order->user_id === $request->user()->id || $request->user()->isStaff(),
             403,
             'Anda tidak memiliki akses ke resi ini.'
         );

@@ -36,11 +36,16 @@ export default function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
-    apiFetch<Paginated<OliProduct>>("/oli-products").then((res) => setProducts(res.data));
+    apiFetch<Paginated<OliProduct>>("/oli-products")
+      .then((res) => setProducts(res.data))
+      .catch(() => {
+        /* diabaikan: non-admin akan dialihkan oleh useRequireAuth */
+      });
   }, []);
 
   useEffect(() => {
-    if (user) load();
+    // Hanya muat untuk admin; non-admin dialihkan oleh guard.
+    if (user && user.role === "admin") load();
   }, [user, load]);
 
   function edit(p: OliProduct) {
