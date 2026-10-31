@@ -37,15 +37,15 @@ export default function Navbar() {
                   </Link>
                 </>
               )}
+              {(user.role === "admin" || user.role === "kasir") && (
+                <Link href="/admin/orders" className="hover:text-blue-700">
+                  Kelola Pesanan
+                </Link>
+              )}
               {user.role === "admin" && (
-                <>
-                  <Link href="/admin/orders" className="hover:text-blue-700">
-                    Kelola Pesanan
-                  </Link>
-                  <Link href="/admin/products" className="hover:text-blue-700">
-                    Kelola Oli
-                  </Link>
-                </>
+                <Link href="/admin/products" className="hover:text-blue-700">
+                  Kelola Oli
+                </Link>
               )}
               <span className="text-gray-500">
                 {user.name}

@@ -8,8 +8,9 @@ import type { Role } from "@/lib/types";
 /**
  * Melindungi halaman: redirect ke /login jika belum login (menyertakan
  * tujuan asal via query ?redirect=), atau ke / jika role tidak sesuai.
+ * `role` bisa satu role atau beberapa (array) — user harus salah satunya.
  */
-export function useRequireAuth(role?: Role) {
+export function useRequireAuth(role?: Role | Role[]) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -23,8 +24,14 @@ export function useRequireAuth(role?: Role) {
           ? window.location.pathname + window.location.search
           : "/";
       router.replace(`/login?redirect=${encodeURIComponent(target)}`);
-    } else if (role && user.role !== role) {
-      router.replace("/");
+      return;
+    }
+
+    if (role) {
+      const allowed = Array.isArray(role) ? role : [role];
+      if (!allowed.includes(user.role)) {
+        router.replace("/");
+      }
     }
   }, [user, loading, role, router]);
 

@@ -39,19 +39,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/resi', [ResiController::class, 'download']);
 
     // -----------------------------------------------------------------------
-    // Admin
+    // Panel staf (prefix /admin)
     // -----------------------------------------------------------------------
-    Route::middleware('admin')->prefix('admin')->group(function () {
-        // Kelola katalog oli
-        Route::post('/oli-products', [OliProductController::class, 'store']);
-        Route::match(['put', 'patch'], '/oli-products/{oliProduct}', [OliProductController::class, 'update']);
-        Route::delete('/oli-products/{oliProduct}', [OliProductController::class, 'destroy']);
+    Route::prefix('admin')->group(function () {
+        // Kelola katalog oli — KHUSUS ADMIN
+        Route::middleware('admin')->group(function () {
+            Route::post('/oli-products', [OliProductController::class, 'store']);
+            Route::match(['put', 'patch'], '/oli-products/{oliProduct}', [OliProductController::class, 'update']);
+            Route::delete('/oli-products/{oliProduct}', [OliProductController::class, 'destroy']);
 
-        // Kelola pesanan
-        Route::get('/orders', [AdminOrderController::class, 'index']);
-        Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
-        Route::post('/orders/{order}/confirm', [AdminOrderController::class, 'confirm']);
-        Route::post('/orders/{order}/complete', [AdminOrderController::class, 'complete']);
-        Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel']);
+            // Edit data pemesan (perbaiki salah input nama/email/HP) — KHUSUS ADMIN
+            Route::patch('/orders/{order}/customer', [AdminOrderController::class, 'updateCustomer']);
+        });
+
+        // Kelola pesanan — admin ATAU kasir
+        Route::middleware('staff')->group(function () {
+            Route::get('/orders', [AdminOrderController::class, 'index']);
+            Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
+            Route::post('/orders/{order}/confirm', [AdminOrderController::class, 'confirm']);
+            Route::post('/orders/{order}/complete', [AdminOrderController::class, 'complete']);
+            Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel']);
+        });
     });
 });

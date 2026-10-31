@@ -65,7 +65,8 @@ class Order extends Model
      */
     public function customerName(): string
     {
-        return $this->user?->name ?? $this->customer_name ?? '-';
+        // Prioritaskan data pada pesanan (bisa dikoreksi admin), lalu akun user.
+        return $this->customer_name ?? $this->user?->name ?? '-';
     }
 
     /**
@@ -73,7 +74,7 @@ class Order extends Model
      */
     public function customerEmail(): ?string
     {
-        return $this->user?->email ?? $this->customer_email;
+        return $this->customer_email ?? $this->user?->email;
     }
 
     /**

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'staff' => \App\Http\Middleware\EnsureStaff::class,
             'auth.optional' => \App\Http\Middleware\OptionalSanctumAuth::class,
         ]);
     })

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateOrderCustomerRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -61,6 +62,21 @@ class AdminOrderController extends Controller
     public function cancel(Order $order): OrderResource
     {
         $order = $this->orders->cancel($order);
+
+        return new OrderResource($order->load(['items', 'payment', 'user']));
+    }
+
+    /**
+     * Admin memperbaiki data pemesan (nama/email/HP) bila ada salah input.
+     * Nilai disimpan di kolom customer_* pesanan (tidak mengubah akun user).
+     */
+    public function updateCustomer(UpdateOrderCustomerRequest $request, Order $order): OrderResource
+    {
+        $order->update([
+            'customer_name' => $request->validated('customer_name'),
+            'customer_email' => $request->validated('customer_email'),
+            'customer_phone' => $request->validated('customer_phone'),
+        ]);
 
         return new OrderResource($order->load(['items', 'payment', 'user']));
     }

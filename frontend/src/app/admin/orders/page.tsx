@@ -16,7 +16,7 @@ const FILTERS: { label: string; value: OrderStatus | "" }[] = [
 ];
 
 export default function AdminOrdersPage() {
-  const { user, loading: authLoading } = useRequireAuth("admin");
+  const { user, loading: authLoading } = useRequireAuth(["admin", "kasir"]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<OrderStatus | "">("");
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,13 @@ export default function AdminOrdersPage() {
   const [cashInput, setCashInput] = useState("");
   const [payError, setPayError] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+
+  // Modal edit data pemesan (admin saja)
+  const isAdmin = user?.role === "admin";
+  const [editFor, setEditFor] = useState<Order | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
+  const [editError, setEditError] = useState<string | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -104,6 +111,42 @@ export default function AdminOrdersPage() {
     }
   }
 
+  function openEdit(o: Order) {
+    setEditFor(o);
+    setEditForm({
+      name: o.customer?.name ?? "",
+      email: o.customer?.email ?? "",
+      phone: o.customer?.phone ?? "",
+    });
+    setEditError(null);
+  }
+
+  async function submitEdit() {
+    if (!editFor) return;
+    if (!editForm.name.trim() || !editForm.email.trim() || !editForm.phone.trim()) {
+      setEditError("Nama, email, dan nomor wajib diisi.");
+      return;
+    }
+    setSavingEdit(true);
+    setEditError(null);
+    try {
+      await apiFetch(`/admin/orders/${editFor.id}/customer`, {
+        method: "PATCH",
+        body: {
+          customer_name: editForm.name.trim(),
+          customer_email: editForm.email.trim(),
+          customer_phone: editForm.phone.trim(),
+        },
+      });
+      setEditFor(null);
+      load();
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : "Gagal menyimpan perubahan.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   if (authLoading || !user) return <p className="text-gray-500">Memuat...</p>;
 
   return (
@@ -138,6 +181,9 @@ export default function AdminOrdersPage() {
                   <p className="text-sm text-gray-500">
                     {o.customer?.name} • {o.vehicle_type}
                     {o.vehicle_brand ? ` (${o.vehicle_brand})` : ""} • {formatDate(o.created_at)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {o.customer?.email ?? "-"} • {o.customer?.phone ?? "-"}
                   </p>
                   {o.scheduled_date && (
                     <p className="text-sm font-medium text-blue-700">
@@ -198,6 +244,14 @@ export default function AdminOrdersPage() {
                     className="rounded-lg border border-red-300 px-3 py-1.5 text-red-600 text-sm hover:bg-red-50 disabled:opacity-60"
                   >
                     Batalkan
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={() => openEdit(o)}
+                    className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
+                  >
+                    Edit Pemesan
                   </button>
                 )}
               </div>
@@ -261,6 +315,67 @@ export default function AdminOrdersPage() {
                 className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-60"
               >
                 {paying ? "Memproses..." : "Terima & Selesaikan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !savingEdit && setEditFor(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold">Edit Data Pemesan</h3>
+            <p className="mt-1 text-sm text-gray-500">{editFor.order_number}</p>
+
+            <label className="mt-4 block text-sm font-medium">Nama Pemesan</label>
+            <input
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+
+            <label className="mt-3 block text-sm font-medium">Email Pemesan</label>
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            />
+
+            <label className="mt-3 block text-sm font-medium">No. Telepon / WhatsApp</label>
+            <input
+              type="tel"
+              value={editForm.phone}
+              onChange={(e) => setEditForm({ ...editForm, phone: e.target.value.replace(/[^\d]/g, "") })}
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+              placeholder="628xxxxxxxxxx"
+            />
+            <p className="mt-1 text-xs text-gray-400">Format internasional, contoh: 6281234567890</p>
+
+            {editError && <p className="mt-3 text-sm text-red-600">{editError}</p>}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditFor(null)}
+                disabled={savingEdit}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={submitEdit}
+                disabled={savingEdit}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {savingEdit ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>

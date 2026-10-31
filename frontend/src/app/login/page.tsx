@@ -34,7 +34,9 @@ function LoginForm() {
       if (redirect) {
         router.push(redirect);
       } else {
-        router.push(user.role === "admin" ? "/admin/orders" : "/orders");
+        router.push(
+          user.role === "admin" || user.role === "kasir" ? "/admin/orders" : "/orders"
+        );
       }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Gagal masuk.");

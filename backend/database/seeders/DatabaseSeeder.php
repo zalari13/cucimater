@@ -29,6 +29,18 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Kasir (staf operasional: kelola pesanan, tidak kelola produk)
+        User::updateOrCreate(
+            ['email' => 'kasir@cuci.test'],
+            [
+                'name' => 'Kasir Cuci',
+                'phone' => '081200001111',
+                'role' => 'kasir',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
         // Pelanggan contoh
         User::updateOrCreate(
             ['email' => 'pelanggan@cuci.test'],

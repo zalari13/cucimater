@@ -37,6 +37,19 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isKasir(): bool
+    {
+        return $this->role === 'kasir';
+    }
+
+    /**
+     * Staf operasional yang boleh mengelola pesanan (admin atau kasir).
+     */
+    public function isStaff(): bool
+    {
+        return in_array($this->role, ['admin', 'kasir'], true);
+    }
+
     public function isPelanggan(): bool
     {
         return $this->role === 'pelanggan';
