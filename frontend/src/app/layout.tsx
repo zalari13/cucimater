@@ -1,37 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { Inter } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
+import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cuci Kendaraan & Oli",
-  description: "Sistem Informasi Pemesanan Jasa Cuci Kendaraan dan Penjualan Oli",
+  title: "Tri Tunggal Jaya | Cuci Kendaraan & Oli",
+  description: "Pesan jasa cuci mobil, motor, dan helm serta beli oli secara online. Bayar tunai di lokasi.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
+    // suppressHydrationWarning: mencegah peringatan akibat ekstensi browser
+    // (mis. Grammarly, translate) yang menambah atribut ke <html>/<body>.
+    <html lang="id" suppressHydrationWarning>
+      <body
+        suppressHydrationWarning
+        className={`${inter.className} min-h-screen bg-slate-100 text-neutral-900 antialiased`}
+      >
         <AuthProvider>
           <Navbar />
-          <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-8">{children}</main>
-          <footer className="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
-            Sistem Pemesanan Jasa Cuci Kendaraan &amp; Penjualan Oli
-          </footer>
+          {/* Tanpa container: tiap halaman mengatur lebarnya sendiri */}
+          <main>{children}</main>
         </AuthProvider>
       </body>
     </html>
